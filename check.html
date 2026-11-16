@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Secret Santa check</title>
+<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,sans-serif;background:#1a1625;color:#fff;text-align:center;padding:20px}
+.big{font-size:90px}p{font-size:18px;max-width:340px;line-height:1.4}</style></head>
+<body><div><div class="big" id="icon">⏳</div><p id="msg">Checking the four wheels…</p></div>
+<script>
+(async()=>{
+ const icon=document.getElementById('icon'),msg=document.getElementById('msg');
+ try{
+  const got=[];
+  for(let i=0;i<4;i++){
+   const r=await fetch('secret-santa-wheel-'+(i+1)+'.html',{cache:'no-store'});
+   if(!r.ok)throw new Error('Could not find secret-santa-wheel-'+(i+1)+'.html in the same folder.');
+   const m=(await r.text()).match(/const GK=(-?\d+);/);
+   if(!m)throw new Error('Wheel '+(i+1)+' looks different from expected.');
+   const j=parseInt(m[1],10)/13-7;
+   if(!Number.isInteger(j)||j<0||j>2)throw new Error('Wheel '+(i+1)+' has an invalid draw.');
+   got.push(j>=i?j+1:j);
+  }
+  const noSelf=got.every((p,i)=>p!==i),allDiff=new Set(got).size===4;
+  if(noSelf&&allDiff){icon.textContent='✅';msg.textContent='All good! Every wheel lands on a different friend, and nobody gets herself.'}
+  else{icon.textContent='❌';msg.textContent='Something is wrong with the draw. Ask Claude for new files.'}
+ }catch(e){icon.textContent='⚠️';msg.textContent=e.message}
+})();
+</script></body></html>
